@@ -20,6 +20,7 @@ export function RobertoAI({
   const recognitionRef = useRef<any>(null)
   const recognitionActive = useRef(false)
   const synthRef = useRef<any>(null)
+  const requestInFlightRef = useRef(false)
 
   // Function to speak text using Web Speech API
   const speakResponse = useCallback((text: string) => {
@@ -98,12 +99,17 @@ export function RobertoAI({
           
           setResponseText(transcript)
 
-          // If this is a final result, get AI response
-          if (event.results[0].isFinal) {
-            const aiResponse = await getAIResponse(transcript)
-            setResponseText(prev => `${prev}\n\nAI: ${aiResponse}`)
-            // Speak the AI response
-            speakResponse(aiResponse)
+          // Only process final results and prevent duplicate requests
+          if (event.results[event.results.length - 1].isFinal && !requestInFlightRef.current) {
+            requestInFlightRef.current = true
+            try {
+              const aiResponse = await getAIResponse(transcript)
+              setResponseText(prev => `${prev}\n\nAI: ${aiResponse}`)
+              // Speak the AI response
+              speakResponse(aiResponse)
+            } finally {
+              requestInFlightRef.current = false
+            }
           }
         }
 
@@ -136,6 +142,8 @@ export function RobertoAI({
       recognitionActive.current = false
       setIsListening(false)
     } else {
+      // Reset state and prevent requests during previous session
+      requestInFlightRef.current = false
       setResponseText("Listening...")
       recognitionRef.current.start()
       recognitionActive.current = true
