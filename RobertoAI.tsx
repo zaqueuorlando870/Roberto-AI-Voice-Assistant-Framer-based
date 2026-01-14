@@ -25,7 +25,16 @@ export function RobertoAI({
     if (!text.trim()) return ""
     try {
       setIsProcessing(true)
-      const response = await fetch(apiEndpoint, {
+      
+      // Ensure API endpoint has https:// protocol
+      let endpoint = apiEndpoint
+      if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+        endpoint = 'https://' + endpoint
+      }
+      
+      console.log('Calling API endpoint:', endpoint)
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -33,20 +42,22 @@ export function RobertoAI({
         body: JSON.stringify({
           message: text,
           systemPrompt: systemPrompt,
-        })
+        }),
+        mode: 'cors',
+        credentials: 'omit',
       })
       
       if (!response.ok) {
-        const errorData = await response.json()
+        const errorData = await response.json().catch(() => ({}))
         console.error('API Error:', errorData)
-        throw new Error('Failed to get response from AI')
+        throw new Error(`API returned status ${response.status}`)
       }
       
       const data = await response.json()
       return data.response || "I couldn't process that request."
     } catch (error) {
       console.error('Error getting AI response:', error)
-      return "Sorry, I'm having trouble connecting to the AI service. Please check your API endpoint."
+      return "Sorry, I'm having trouble connecting to the AI service. Error: " + (error as Error).message
     } finally {
       setIsProcessing(false)
     }

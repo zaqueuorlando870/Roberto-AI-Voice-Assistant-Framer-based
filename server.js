@@ -3,7 +3,15 @@ const cors = require('cors');
 require('dotenv').config();
 
 const app = express();
-app.use(cors());
+
+// Enable CORS with explicit options for Framer compatibility
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false,
+}));
+
 app.use(express.json());
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
