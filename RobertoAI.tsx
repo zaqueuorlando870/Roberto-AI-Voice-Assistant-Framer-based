@@ -6,13 +6,15 @@ interface RobertoAIProps {
   buttonColor?: string
   apiEndpoint?: string
   systemPrompt?: string
+  voiceName?: string
 }
 
 export function RobertoAI({
   position = "bottom-right",
   buttonColor = "#e60000",
   apiEndpoint = "http://localhost:3000/api/chat",
-  systemPrompt = "You are Roberto, a helpful AI assistant. Respond concisely and helpfully."
+  systemPrompt = "You are Roberto, a helpful AI assistant. Respond concisely and helpfully.",
+  voiceName = ""
 }: RobertoAIProps = {}) {
   const [isListening, setIsListening] = useState(false)
   const [responseText, setResponseText] = useState("")
@@ -33,9 +35,18 @@ export function RobertoAI({
       utterance.pitch = 1
       utterance.volume = 1
       
+      // Set voice if specified
+      if (voiceName) {
+        const voices = window.speechSynthesis.getVoices()
+        const selectedVoice = voices.find(v => v.name === voiceName)
+        if (selectedVoice) {
+          utterance.voice = selectedVoice
+        }
+      }
+      
       window.speechSynthesis.speak(utterance)
     }
-  }, [])
+  }, [voiceName])
 
   // Function to get AI response from backend
   const getAIResponse = useCallback(async (text: string) => {
@@ -120,6 +131,14 @@ export function RobertoAI({
         }
 
         recognitionRef.current = recognition
+      }
+      
+      // Load available voices
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => {
+          const voices = window.speechSynthesis.getVoices()
+          console.log('Available voices:', voices.map(v => v.name))
+        }
       }
     }
 
@@ -843,6 +862,12 @@ addPropertyControls(RobertoAI, {
     type: ControlType.String,
     title: "System Prompt",
     defaultValue: "You are Roberto, a helpful AI assistant. Respond concisely and helpfully.",
+    displaySegmentedControl: false,
+  },
+  voiceName: {
+    type: ControlType.String,
+    title: "Voice",
+    placeholder: "Default system voice",
     displaySegmentedControl: false,
   },
 })
