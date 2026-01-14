@@ -19,6 +19,22 @@ export function RobertoAI({
   const [isProcessing, setIsProcessing] = useState(false)
   const recognitionRef = useRef<any>(null)
   const recognitionActive = useRef(false)
+  const synthRef = useRef<any>(null)
+
+  // Function to speak text using Web Speech API
+  const speakResponse = useCallback((text: string) => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel()
+      
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.rate = 1
+      utterance.pitch = 1
+      utterance.volume = 1
+      
+      window.speechSynthesis.speak(utterance)
+    }
+  }, [])
 
   // Function to get AI response from backend
   const getAIResponse = useCallback(async (text: string) => {
@@ -86,6 +102,8 @@ export function RobertoAI({
           if (event.results[0].isFinal) {
             const aiResponse = await getAIResponse(transcript)
             setResponseText(prev => `${prev}\n\nAI: ${aiResponse}`)
+            // Speak the AI response
+            speakResponse(aiResponse)
           }
         }
 
@@ -104,7 +122,7 @@ export function RobertoAI({
         recognitionRef.current.stop()
       }
     }
-  }, [getAIResponse])
+  }, [getAIResponse, speakResponse])
 
   const toggleListening = (e: React.MouseEvent) => {
     e.stopPropagation()
