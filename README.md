@@ -151,10 +151,3 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 ## License
 
 MIT
-
----
-
-If you'd like, I can also:
-
-- Add a short example of a REST request/response based on `includes/rest.php`.
-- Commit the README and push a branch for review.
